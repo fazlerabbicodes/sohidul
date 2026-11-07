@@ -1,0 +1,43 @@
+{
+  "name": "CommercePilot to Google Sheets Realtime Order Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "commercepilot-order-sync",
+        "responseMode": "onReceived"
+      },
+      "id": "1",
+      "name": "Order Created Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "YOUR_GOOGLE_SHEET_ID",
+        "range": "Orders!A:H",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [480, 300]
+    }
+  ],
+  "connections": {
+    "Order Created Webhook": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

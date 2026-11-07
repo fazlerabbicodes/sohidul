@@ -1,0 +1,125 @@
+{
+  "name": "CommercePilot to SteadFast Courier Booking",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "commercepilot-order-created",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook from CommercePilot",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equal",
+              "value2": "confirmed"
+            }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Check If Order Confirmed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://portal.steadfast.com.bd/api/v1/create_order",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Key",
+              "value": "YOUR_STEADFAST_API_KEY"
+            },
+            {
+              "name": "Secret-Key",
+              "value": "YOUR_STEADFAST_SECRET_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"invoice\": \"{{ $json.id }}\",\n  \"recipient_name\": \"{{ $json.customer_name }}\",\n  \"recipient_phone\": \"{{ $json.customer_phone }}\",\n  \"recipient_address\": \"{{ $json.delivery_address }}\",\n  \"cod_amount\": {{ $json.total }},\n  \"note\": \"Handle with care - CommercePilot AI Automated Dispatch\"\n}"
+      },
+      "id": "3",
+      "name": "Create SteadFast Consignment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 220]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://localhost:5000/api/orders/{{ $('Webhook from CommercePilot').item.json.id }}/status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"status\": \"shipped\"\n}"
+      },
+      "id": "4",
+      "name": "Update Status in CommercePilot to Shipped",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [920, 220]
+    }
+  ],
+  "connections": {
+    "Webhook from CommercePilot": {
+      "main": [
+        [
+          {
+            "node": "Check If Order Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Order Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Create SteadFast Consignment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create SteadFast Consignment": {
+      "main": [
+        [
+          {
+            "node": "Update Status in CommercePilot to Shipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "CommercePilot High-Risk Fraud Alert to Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "commercepilot-fraud-alert",
+        "responseMode": "onReceived"
+      },
+      "id": "1",
+      "name": "Fraud Webhook Ingest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=🚨 *COMMERCEPILOT FRAUD SHIELD ALERT*\n\nOrder ID: `{{ $json.order.id }}`\nCustomer: *{{ $json.order.customer_name }}*\nPhone: `{{ $json.order.customer_phone }}`\nAmount: *৳{{ $json.order.total }}*\n\n⚠️ *Risk Score:* `{{ $json.score }}/100`\n📌 *Reason:* {{ $json.reason }}\n\nAction: Please review and approve or reject in dashboard: http://localhost:5000/fraud",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "2",
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [480, 300]
+    }
+  ],
+  "connections": {
+    "Fraud Webhook Ingest": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
